@@ -76,6 +76,18 @@ ext = set()
 unknow = set()
 
 
+def main():
+    try:
+        folder_for_scan = Path(sys.argv[1])  # r"C:\Users\hp\Desktop\sort"
+    except IndexError as Err:
+        sys.exit("Директорію для сортування не знайдено. Виконайте перезапуск")
+
+    print(f"Початок сортування директорії {folder_for_scan.resolve()}")
+    scan(folder_for_scan)
+    print("Сортування закінчено!\n")
+    data_output(list_files, ext, unknow)
+
+
 def normalise(file_stem: str) -> str:
     new_name = file_stem.translate(translate_map)
     new_name = re.sub(r"\W", "_", new_name)
@@ -131,38 +143,36 @@ def handle_archive(filename: Path, target_folder: Path):
     )
 
     folder_for_file.mkdir(exist_ok=True, parents=True)
-    try:
-        shutil.unpack_archive(str(filename.resolve()), str(folder_for_file.resolve()))
-        list_files.append((normalise(filename.stem) + filename.suffix))
-    except shutil.ReadError:
-        print(f"Це не архів {filename}!")
-        folder_for_file.rmdir()
-        return None
+    shutil.unpack_archive(str(filename.resolve()), str(folder_for_file.resolve()))
+    list_files.append((normalise(filename.stem) + filename.suffix))
     filename.unlink()
 
 
 def handle_folder(folder: Path):
     try:
         folder.rmdir()
-        print(f"Знайдено порожню папку, яку буде видалено {folder}")
+        print(f"Знайдено порожню директорію, яку буде видалено {folder}")
         return False
     except OSError:
         return True
 
 
-def record_output(list_files: list, ext: set, unknow: set, data):
-    with open(data, "w") as out:
-        out.write("СПИСОК ФАЙЛІВ:" + "\n")
-        for i in list_files:
-            out.write(i + "\n")
+def data_output(
+    list_files: list,
+    ext: set,
+    unknow: set,
+):
+    print(f"ПЕРЕЛІК ФАЙЛІВ:")
+    for i in list_files:
+        print(i)
 
-        out.write("\n" + "СПИСОК ВІДОМИХ РОЗШИРЕНЬ:" + "\n")
-        for i in ext:
-            out.write(i + "\n")
+    print(f"\n ПЕРЕЛІК ВІДОМИХ РОШИРЕНЬ:")
+    for i in ext:
+        print(i)
 
-        out.write("\n" + "СПИСОК НЕВІДОМИХ РОЗШИРЕНЬ:" + "\n")
-        for i in unknow:
-            out.write(i + "\n")
+    print(f"\n ПЕРЕЛІК НЕВІДОМИХ РОШИРЕНЬ:")
+    for i in unknow:
+        print(i)
 
 
 def scan(folder: Path):
@@ -198,11 +208,6 @@ def scan(folder: Path):
 
 
 if __name__ == "__main__":
-    if sys.argv[1]:
-        folder_for_scan = Path(sys.argv[1])  # r"C:\Users\hp\Desktop\sort"
-        print(f"Початок сортування директорії {folder_for_scan.resolve()}")
-        scan(folder_for_scan)
-        record_output(list_files, ext, unknow, folder_for_scan / "data.txt")
-        print('Сортування закінчено!')
+    main()
 
 # TODO: запускаємо:  python3 sort.py `назва_папки_для_сортування`
